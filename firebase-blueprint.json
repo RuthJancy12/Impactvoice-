@@ -1,0 +1,244 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Registered Thoothukudi resident or municipal official profile.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full display name of the user.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address of the user.",
+          "minLength": 3,
+          "maxLength": 200
+        },
+        "phone": {
+          "type": "string",
+          "description": "Contact phone number for SMS dispatch alerts.",
+          "minLength": 0,
+          "maxLength": 40
+        },
+        "role": {
+          "type": "string",
+          "description": "System role of the user.",
+          "enum": ["citizen", "admin"],
+          "minLength": 5,
+          "maxLength": 20
+        },
+        "location": {
+          "type": "string",
+          "description": "Primary Thoothukudi locality of the user.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "ward": {
+          "type": "string",
+          "description": "Municipal ward or zone.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "streetAddress": {
+          "type": "string",
+          "description": "Street address in Thoothukudi.",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was last updated."
+        }
+      },
+      "required": ["uid", "name", "email", "role", "location", "ward", "createdAt", "updatedAt"]
+    },
+    "IssueReport": {
+      "title": "IssueReport",
+      "description": "Civic infrastructure issue report submitted for Thoothukudi municipal dispatch.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Short summary title of the civic issue.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed observation description of the issue.",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "category": {
+          "type": "string",
+          "description": "Civic report category.",
+          "enum": [
+            "Water Leakage",
+            "Road Damage",
+            "Street Light",
+            "Garbage",
+            "Drainage",
+            "Electricity",
+            "Other"
+          ],
+          "minLength": 3,
+          "maxLength": 50
+        },
+        "location": {
+          "type": "string",
+          "description": "Locality or street location in Thoothukudi.",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "priority": {
+          "type": "string",
+          "description": "Urgency priority level.",
+          "enum": ["Low", "Medium", "High", "Critical"],
+          "minLength": 3,
+          "maxLength": 20
+        },
+        "status": {
+          "type": "string",
+          "description": "Current resolution status.",
+          "enum": ["Pending", "In Progress", "Resolved"],
+          "minLength": 6,
+          "maxLength": 20
+        },
+        "assignedDepartment": {
+          "type": "string",
+          "description": "Automatically routed Thoothukudi department.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "userId": {
+          "type": "string",
+          "description": "UID of the user who created the report.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "visibility": {
+          "type": "string",
+          "description": "Visibility scope for public municipal ledger queries.",
+          "enum": ["public"],
+          "minLength": 6,
+          "maxLength": 10
+        },
+        "referenceCode": {
+          "type": "string",
+          "description": "Human-readable municipal reference ticket ID.",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "ward": {
+          "type": "string",
+          "description": "Thoothukudi ward or zone name.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "reporterName": {
+          "type": "string",
+          "description": "Display name of the reporting resident.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "assignedCrew": {
+          "type": "string",
+          "description": "Assigned municipal field unit.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "observedAt": {
+          "type": "string",
+          "description": "Date and time when the issue was observed.",
+          "minLength": 1,
+          "maxLength": 50
+        },
+        "upvotes": {
+          "type": "integer",
+          "description": "Number of resident confirmations."
+        },
+        "lastStatusNote": {
+          "type": "string",
+          "description": "Latest dispatch or status update note.",
+          "minLength": 0,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the report was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the report was last updated."
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "category",
+        "location",
+        "priority",
+        "status",
+        "assignedDepartment",
+        "userId",
+        "visibility",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted administrator lookup record.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Admin user UID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when admin record was provisioned."
+        }
+      },
+      "required": ["uid", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profile documents restricted to the owner or municipal admin."
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/IssueReport" },
+      "description": "Civic issue reports for Thoothukudi municipal dispatch."
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Read-only administrator registry."
+    }
+  }
+}

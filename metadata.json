@@ -1,0 +1,10 @@
+{
+  "name": " ImpactVoice",
+  "description": "Civic issue reporting and municipal dispatch platform with offline capability for residents and community organizations.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

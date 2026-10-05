@@ -1,0 +1,155 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Global Safety Net: Default-Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 2. Hardened Global Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.uid is string && request.auth.uid.size() >= 1 && request.auth.uid.size() <= 128;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        (request.auth.token.email == 'ruthjancy12@gmail.com' && request.auth.token.email_verified == true)
+      );
+    }
+
+    // 3. Entity Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'name', 'email', 'role', 'location', 'ward', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['uid', 'name', 'email', 'phone', 'role', 'location', 'ward', 'streetAddress', 'createdAt', 'updatedAt']) &&
+        data.uid == request.auth.uid &&
+        isValidId(data.uid) &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 200 &&
+        (!('phone' in data) || (data.phone is string && data.phone.size() <= 40)) &&
+        data.role is string && data.role.size() >= 5 && data.role.size() <= 20 &&
+        data.role in ['citizen', 'admin'] &&
+        data.location is string && data.location.size() >= 1 && data.location.size() <= 120 &&
+        data.ward is string && data.ward.size() >= 1 && data.ward.size() <= 120 &&
+        (!('streetAddress' in data) || (data.streetAddress is string && data.streetAddress.size() <= 200)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidIssueReport(data) {
+      return data.keys().hasAll(['title', 'description', 'category', 'location', 'priority', 'status', 'assignedDepartment', 'userId', 'visibility', 'createdAt', 'updatedAt']) &&
+        data.keys().hasOnly(['title', 'description', 'category', 'location', 'priority', 'status', 'assignedDepartment', 'userId', 'visibility', 'referenceCode', 'ward', 'reporterName', 'assignedCrew', 'observedAt', 'upvotes', 'lastStatusNote', 'createdAt', 'updatedAt']) &&
+        isValidId(data.userId) &&
+        data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+        data.description is string && data.description.size() >= 1 && data.description.size() <= 2000 &&
+        data.category is string && data.category.size() >= 3 && data.category.size() <= 50 &&
+        data.category in ['Water Leakage', 'Road Damage', 'Street Light', 'Garbage', 'Drainage', 'Electricity', 'Other'] &&
+        data.location is string && data.location.size() >= 1 && data.location.size() <= 200 &&
+        data.priority is string && data.priority.size() >= 3 && data.priority.size() <= 20 &&
+        data.priority in ['Low', 'Medium', 'High', 'Critical'] &&
+        data.status is string && data.status.size() >= 6 && data.status.size() <= 20 &&
+        data.status in ['Pending', 'In Progress', 'Resolved'] &&
+        data.assignedDepartment is string && data.assignedDepartment.size() >= 1 && data.assignedDepartment.size() <= 120 &&
+        data.visibility is string && data.visibility.size() == 6 && data.visibility == 'public' &&
+        (!('referenceCode' in data) || (data.referenceCode is string && data.referenceCode.size() >= 1 && data.referenceCode.size() <= 50)) &&
+        (!('ward' in data) || (data.ward is string && data.ward.size() >= 1 && data.ward.size() <= 120)) &&
+        (!('reporterName' in data) || (data.reporterName is string && data.reporterName.size() >= 1 && data.reporterName.size() <= 120)) &&
+        (!('assignedCrew' in data) || (data.assignedCrew is string && data.assignedCrew.size() >= 1 && data.assignedCrew.size() <= 120)) &&
+        (!('observedAt' in data) || (data.observedAt is string && data.observedAt.size() >= 1 && data.observedAt.size() <= 50)) &&
+        (!('upvotes' in data) || (data.upvotes is int && data.upvotes >= 0 && data.upvotes <= 100000)) &&
+        (!('lastStatusNote' in data) || (data.lastStatusNote is string && data.lastStatusNote.size() <= 500)) &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // 4. Collection: /users/{userId} (PII Isolated to Owner or Admin)
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && (request.auth.uid == userId || isAdmin());
+      allow list: if false;
+
+      allow create: if isSignedIn() &&
+        isValidId(userId) &&
+        request.auth.uid == userId &&
+        isValidUserProfile(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (incoming().role == 'citizen' || (incoming().role == 'admin' && isAdmin()));
+
+      allow update: if isSignedIn() &&
+        isValidId(userId) &&
+        request.auth.uid == userId &&
+        isValidUserProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            incoming().role == existing().role &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email', 'phone', 'location', 'ward', 'streetAddress', 'updatedAt'])
+          ) ||
+          (
+            isAdmin() &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email', 'phone', 'role', 'location', 'ward', 'streetAddress', 'updatedAt'])
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    // 5. Collection: /reports/{reportId} (Thoothukudi Civic Issue Ledger)
+    match /reports/{reportId} {
+      allow get: if isSignedIn() && isValidId(reportId) && (existing().visibility == 'public' || existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (existing().visibility == 'public' || existing().userId == request.auth.uid || isAdmin());
+
+      allow create: if isSignedIn() &&
+        isValidId(reportId) &&
+        isValidIssueReport(incoming()) &&
+        incoming().userId == request.auth.uid &&
+        incoming().status == 'Pending' &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+
+      allow update: if isSignedIn() &&
+        isValidId(reportId) &&
+        isValidIssueReport(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (existing().status != 'Resolved' || isAdmin()) &&
+        (
+          // Action 1: Owner edits report details or status
+          (
+            existing().userId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'category', 'location', 'priority', 'status', 'assignedDepartment', 'ward', 'assignedCrew', 'upvotes', 'lastStatusNote', 'updatedAt'])
+          ) ||
+          // Action 2: Status / Dispatch / Upvote update
+          (
+            incoming().diff(existing()).affectedKeys().hasOnly(['status', 'priority', 'assignedCrew', 'upvotes', 'lastStatusNote', 'updatedAt'])
+          ) ||
+          // Action 3: Admin full override
+          isAdmin()
+        );
+
+      allow delete: if isSignedIn() && isValidId(reportId) && isAdmin();
+    }
+
+    // 6. Collection: /admins/{adminId} (Trusted Admin Registry)
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list, create, update, delete: if false;
+    }
+  }
+}
