@@ -89,44 +89,28 @@ The assigned field team can:
 ## 🔄 System Workflow
 
 
+USER
+  ↓
+Manual Report / AI Voice
+  ↓
+AI Processing
+(Whisper + Gemini)
+  ↓
+ADMIN CONSOLE
+(Central Control Center)
+  ↓
+Verify + Categorize + Prioritize
+  ↓
+Appropriate Department
+  ↓
+FIELD DISPATCH TEAM
+  ↓
+Inspection / Repair
+  ↓
+Status Update
+  ↓
+ADMIN CONSOLE
+  ↓
+USER NOTIFICATION
 
-Citizen
-   │
-   ├── Manual Report
-   │
-   └── AI Voice Report
-           │
-           ▼
-    OpenAI Whisper
-    Speech → Text
-           │
-           ▼
-       Gemini AI
-    Information Extraction
-           │
-           ▼
-      Admin Console
-     Central Control
-           │
-     ┌─────┴─────┐
-     │           │
- Verify       Prioritize
-     │           │
-     └─────┬─────┘
-           ▼
- Appropriate Department
-           │
-           ▼
-   Field Dispatch Team
-           │
-           ▼
-   Inspection / Repair
-           │
-           ▼
-      Status Update
-           │
-           ▼
-      Admin Console
-           │
-           ▼
-    Citizen Notification
+
