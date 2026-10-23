@@ -112,5 +112,29 @@ Status Update
 ADMIN CONSOLE
   ↓
 USER NOTIFICATION
+## 📦 Installation and Setup
+
+The `node_modules` folder is not included in this repository because it contains installed dependencies and can be very large.
+
+### Steps to Run the Frontend
+
+1. Install [Node.js](https://nodejs.org/).
+2. Clone or download this repository.
+3. Open the frontend folder in your terminal.
+4. Install the required dependencies:
+
+   ```bash
+   npm install
+   ```
+
+5. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+**Note:** The `node_modules` folder will be generated automatically when you run `npm install`.
+
+
 
 
